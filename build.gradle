@@ -1,0 +1,81 @@
+import java.util.regex.Pattern
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+
+group = "zombicom"
+archivesBaseName = "ZombicomCore"
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+// Define properties file
+ext.configFile = file "build.properties"
+
+configFile.withReader {
+    def prop = new Properties()
+    prop.load(it)
+    project.ext.config = new ConfigSlurper().parse prop
+}
+
+project.config.mod_version = pullVersion()
+version = "${config.minecraft_version}-${config.mod_version}." + (System.env.BUILD_NUMBER ?: "homebaked")
+libsDirName = "../output"
+distsDirName = "../output"
+
+minecraft {
+    version = config.minecraft_version + "-" + config.forge_version
+    mappings = "${config.mappings_version}"
+    runDir = "run"
+    useDepAts = true
+
+    replace '${version}', project.version
+    replaceIn "ZombicomCore.java"
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+    rename '(.+_at.cfg)', 'META-INF/$1'
+}
+
+def pullVersion() {
+    def file = file("src/main/java/zombicom/ZombicomCore.java")
+    def version = ""
+    def pattern = Pattern.compile("^\tpublic static final String VERSION = \"([\\d\\.]*)\";\$")
+    file.eachLine { String s ->
+        def matcher = pattern.matcher(s)
+        if (matcher.matches()) {
+            version = matcher.group(1)
+            return
+        }
+    }
+    return version
+}

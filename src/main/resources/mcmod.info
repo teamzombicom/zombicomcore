@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "zombicomcore",
+    "name": "Zombicom Core",
+    "description": "Required for all Zombicom mods. Includes common customizations for Minecraft.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["skootskapoots", "eldritchnerevar"],
+    "credits": "Team Zombicom",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": [
+      "forge"
+    ]
+  }
+]
